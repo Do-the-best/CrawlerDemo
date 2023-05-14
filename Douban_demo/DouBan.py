@@ -3,7 +3,9 @@
 # @Date: 2023/5/14 12:28
 
 import json
+import pymysql
 import urllib.request
+from datetime import datetime
 
 
 class Spider(object):
@@ -34,17 +36,57 @@ class Spider(object):
             data = dict()
             for movie in movies:
                 try:
-                    data['rank'] = movie['rank']  # 排名
-                    data['score'] = movie['score']  # 评分
-                    data['title'] = movie['title']  # 电影名
+                    data['rank'] = int(movie['rank'])  # 排名
+                    data['score'] = float(movie['score'])  # 评分
+                    data['title'] = movie['title'].replace("\"", "\\\"")  # 电影名
                     data['types'] = ', '.join(movie['types'])  # 类型
                     data['cover_url'] = movie['cover_url']  # 海报
-                    data['release_date'] = movie['release_date']  # 上映时间
+                    data['release_date'] = datetime.strptime(movie['release_date'], '%Y-%m-%d').date()  # 上映时间
                     data['regions'] = ', '.join(movie['regions'])  # 地区
-                    data['actor_count'] = movie['actor_count']  # 主演数量
-                    data['actors'] = ', '.join(movie['actors'])  # 演员列表
+                    data['actor_count'] = int(movie['actor_count'])  # 主演数量
+                    data['actors'] = ', '.join(movie['actors']).replace("\"", "\\\"")  # 演员列表
                     data['movie_url'] = movie['url']  # 详情页链接
-                    data['vote_count'] = movie['vote_count']  # 评价人数
+                    data['vote_count'] = int(movie['vote_count'])  # 评价人数
                 except:
                     pass
                 yield data
+
+
+class WriteSQL():
+    """ 将Spider返回的数据写入数据库中 """
+
+    def __init__(self, host='localhost', user='root', password='python', database='doubanmovies', table_name=None):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.table_name = table_name  # 数据表名
+
+    def myconnect(self):
+        # 创建数据库连接
+        self.db = pymysql.connect(
+            host=self.host,
+            port=3306,
+            user=self.user,
+            password=self.password,
+            db=self.database,
+            charset='utf8'
+        )
+        self.cursor = self.db.cursor()
+
+    def myinsert(self, data):
+        self.data = data
+        sql = 'insert into {} values(null, {}, {}, "{}", "{}", "{}", "{}", "{}", {}, "{}", "{}", {});'.format(
+            self.table_name, self.data['rank'], self.data['score'], self.data['title'],
+            self.data['types'], self.data['cover_url'], self.data['release_date'], self.data['regions'],
+            self.data['actor_count'], self.data['actors'], self.data['movie_url'], self.data['vote_count'])
+        try:
+            self.cursor.execute(sql)
+            self.db.commit()
+        except:
+            print("插入失败")
+            print(sql)
+            print(self.db.rollback())
+
+    def myclose(self):
+        self.db.close()
