@@ -2,12 +2,6 @@
 # @Author: Mr. Li
 # @Date: 2023/5/14 12:28
 
-"""
-剧情：https://movie.douban.com/typerank?type_name=%E5%89%A7%E6%83%85&type=11&interval_id=100:90&action=
-喜剧：https://movie.douban.com/typerank?type_name=%E5%96%9C%E5%89%A7&type=24&interval_id=100:90&action=
-动作：https://movie.douban.com/j/chart/top_list?type=5&interval_id=100%3A90&action=&start=0&limit=20
-"""
-
 import json
 import urllib.request
 
